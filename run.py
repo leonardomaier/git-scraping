@@ -4,8 +4,6 @@ import requests
 
 base_url = 'https://github.com/'
 
-final_links = []
-
 
 # Parse request content
 def parse_html(text):
@@ -26,7 +24,7 @@ def get_dir_links(soup):
 
         anchor_tag = row.find('a')
 
-        if not anchor_tag:
+        if not anchor_tag or anchor_tag.has_attr('rel'):
             continue
 
         href = anchor_tag['href'].replace('/' + repo_url, '')
@@ -46,14 +44,14 @@ def get_files(links):
     return [link for link in links if not 'tree/master' in link]
 
 
-def get_files_links_recursively(url, links):
+def get_files_links_recursively(url, links, output):
 
     folders = get_folders(links)
 
     files = get_files(links)
 
     for f in files:
-        final_links.append(f)
+        output.append(f)
 
     if len(folders) > 0:
 
@@ -65,9 +63,9 @@ def get_files_links_recursively(url, links):
 
             links = get_dir_links(soup)
 
-            get_files_links_recursively(url, links)
+            get_files_links_recursively(url, links, output)
 
-    return final_links
+    return output
 
 
 with open('repositories.txt') as repositories:
@@ -75,6 +73,8 @@ with open('repositories.txt') as repositories:
     lines = repositories.read().splitlines()
 
     for repo_url in lines:
+
+        output = []
 
         url = base_url + repo_url
 
@@ -84,6 +84,8 @@ with open('repositories.txt') as repositories:
 
         links = get_dir_links(soup)
 
-        files = get_files_links_recursively(url, links)
+        files = get_files_links_recursively(url, links, output)
 
-        print(files)
+        for file_dir in files:
+
+            print(file_dir)

@@ -1,1 +1,2 @@
 leonardomaier/spacejs
+leonardomaier/laravel-api-maker
