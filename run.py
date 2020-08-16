@@ -66,6 +66,10 @@ def request_and_parse(url):
     return BeautifulSoup(response.text, 'html.parser')
 
 
+def convert_kb_to_bytes(kb):
+    return float(kb) * 1000
+
+
 with open('repositories.txt') as repositories:
 
     lines = repositories.read().splitlines()
@@ -95,7 +99,9 @@ with open('repositories.txt') as repositories:
 
             filename = soup.find('strong', class_='final-path').text
 
-            file_ext = filename.split('.')[1]
+            file_info = filename.split('.')
+
+            file_ext = file_info[len(file_info) - 1]
 
             file_data_div = soup.select('div.Box-header.py-2 .text-mono')
 
@@ -105,16 +111,32 @@ with open('repositories.txt') as repositories:
 
             if file_ext not in extension_data:
 
+                total_bytes = float(file_data_arr[13])
+
+                if file_data_arr[14] == 'KB':
+                    total_bytes = convert_kb_to_bytes(total_bytes)
+
                 extension_data[file_ext] = {
-                    'total_lines': int(file_data_arr[0])
+                    'total_lines': int(file_data_arr[0]),
+                    'total_bytes': total_bytes
                 }
 
             else:
 
-                extension_data[file_ext]['total_lines'] += int(file_data_arr[0])
+                extension_data[file_ext]['total_lines'] += int(
+                    file_data_arr[0])
 
-        output_file.write('Extensão   |   Linhas   |   Bytes\n')
+                if file_data_arr[14] == 'KB':
+                    extension_data[file_ext]['total_bytes'] += convert_kb_to_bytes(
+                        file_data_arr[13])
+                else:
+                    extension_data[file_ext]['total_bytes'] += float(
+                        file_data_arr[13])
 
         for ext in extension_data:
 
-            output_file.write(ext + '    | ' + str(extension_data[ext]['total_lines']) + '   |\n')
+            output_file.write('--> ' + ext + '\n\n')
+            
+            output_file.write('Total bytes: ' + str(extension_data[ext]['total_bytes']) + '\n')
+            output_file.write('Total lines: ' +
+                              str(extension_data[ext]['total_lines']) + '\n\n')
